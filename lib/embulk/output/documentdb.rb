@@ -15,7 +15,7 @@ module Embulk
         # configuration code:
         task = {
           'docdb_endpoint'         => config.param('docdb_endpoint',        :string),
-          'docdb_account_key'      => config.param('docdb_endpoint',        :string),
+          'docdb_account_key'      => config.param('docdb_account_key',     :string),
           'docdb_database'         => config.param('docdb_database',        :string),
           'docdb_collection'       => config.param('docdb_collection',      :string),
           'auto_create_database'   => config.param('auto_create_database',  :bool,  :default => true),
@@ -23,22 +23,19 @@ module Embulk
           'partitioned_collection' => config.param('partitioned_collection',:bool,  :default => false),
           'partition_key'          => config.param('partition_key',         :string, :default => nil),
           'offer_throughput'       => config.param('offer_throughput',      :integer, :default => AzureDocumentDB::PARTITIONED_COLL_MIN_THROUGHPUT),
-          'in_key'                 => config.param('in_key',                :string),
-          'out_key_prefix'         => config.param('out_key_prefix',        :string, :default => nil),
+          'key_column'             => config.param('key_column',            :string),
         }
-
+        Embulk.logger.info "transaction start"
         # param validation
         raise ConfigError, 'no docdb_endpoint' if task['docdb_endpoint'].empty?
         raise ConfigError, 'no docdb_account_key' if task['docdb_account_key'].empty?
         raise ConfigError, 'no docdb_database' if task['docdb_database'].empty?
         raise ConfigError, 'no docdb_collection' if task['docdb_collection'].empty?
-        raise ConfigError, 'no in_key' if task['in_key'].empty?
-        raise ConfigError, 'no out_key_prefix' if task['out_key_prefix'].empty?
+        raise ConfigError, 'no key_column' if task['key_column'].empty?
 
         if task['partitioned_collection']
           raise ConfigError, 'partition_key must be set in partitioned collection mode' if @partition_key.empty?
-          if (task['auto_create_collection']
-                && task['offer_throughput'] < AzureDocumentDB::PARTITIONED_COLL_MIN_THROUGHPUT)
+          if (task['auto_create_collection'] && task['offer_throughput'] < AzureDocumentDB::PARTITIONED_COLL_MIN_THROUGHPUT)
             raise ConfigError, sprintf("offer_throughput must be more than and equals to %s",
                                 AzureDocumentDB::PARTITIONED_COLL_MIN_THROUGHPUT)
           end
@@ -48,6 +45,7 @@ module Embulk
         # resume(task, schema, count, &control)
 
         # non-resumable output:
+        Embulk.logger.info "Documentdb output start"
         task_reports = yield(task)
         Embulk.logger.info "Documentdb output finished. Task reports = #{task_reports.to_json}"
 
@@ -67,6 +65,7 @@ module Embulk
       def init
         # initialization code:
         @recordnum = 0
+        @successnum = 0
 
         begin
           @client = nil
@@ -79,7 +78,7 @@ module Embulk
           # initial operations for database
           res = @client.find_databases_by_name(task['docdb_database'])
           if( res[:body]["_count"].to_i == 0 )
-            raise "No database (#{docdb_database}) exists! Enable auto_create_database or create it by useself" if !task['auto_create_database']
+            raise "No database (#{docdb_database})! Enable auto_create_database or create it by yourself" if !task['auto_create_database']
             # create new database as it doesn't exists
             @client.create_database(task['docdb_database'])
           end
@@ -88,7 +87,7 @@ module Embulk
           database_resource = @client.get_database_resource(task['docdb_database'])
           res = @client.find_collections_by_name(database_resource, task['docdb_collection'])
           if( res[:body]["_count"].to_i == 0 )
-            raise "No collection (#{docdb_collection}) exists! Enable auto_create_collection or create it by useself" if !task['auto_create_collection']
+            raise "No collection (#{docdb_collection})! Enable auto_create_collection or create it by yourself" if !task['auto_create_collection']
             # create new collection as it doesn't exists
             if task['partitioned_collection']
               partition_key_paths = ["/#{task['partition_key']}"] 
@@ -101,10 +100,9 @@ module Embulk
           @coll_resource = @client.get_collection_resource(database_resource, task['docdb_collection'])
       
         rescue Exception =>ex
-          Embulk.logger.error { "Error: '#{ex}'" }
+          Embulk.logger.error { "Error: init: '#{ex}'" }
           exit!
         end
-
       end
 
       
@@ -116,23 +114,34 @@ module Embulk
         # output code:
         page.each do |record|
           hash = Hash[schema.names.zip(record)]
-          unique_doc_identifier = "#{@task['out_key_prefix']}#{hash[@task['in_key']]}"
+          @recordnum += 1
+          if !hash.key?(@task['key_column']) 
+            Embulk.logger.warn { "Skip Invalid Record: no key_column, data=>" + hash.to_json }
+            next 
+          end
+          unique_doc_id = "#{hash[@task['key_column']]}"
+          if @task['key_column'] != 'id'
+            hash.delete(@task['key_column'])
+          end
+          # force primary key to be both named "id" and "string" type
+          hash['id'] = unique_doc_id 
+
           begin 
             if @task['partitioned_collection']
-              @client.create_document(@coll_resource, unique_doc_identifier, hash, @task['partition_key']) 
+              @client.create_document(@coll_resource, unique_doc_id, hash, @task['partition_key']) 
             else
-              @client.create_document(@coll_resource, unique_doc_identifier, hash) 
+              @client.create_document(@coll_resource, unique_doc_id, hash) 
             end
-            @recordnum += 1
+            @successnum += 1
           rescue RestClient::ExceptionWithResponse => rcex
             exdict = JSON.parse(rcex.response)
             if exdict['code'] == 'Conflict'
-              Embulk.logger.error { "Duplicate Error: document #{unique_doc_identifier} already exists, data=>" + hash.to_json }
+              Embulk.logger.error { "Duplicate Error: doc id (#{unique_doc_id}) already exists, data=>" + hash.to_json }
             else
               Embulk.logger.error { "RestClient Error: '#{rcex.response}', data=>" + hash.to_json }
             end
           rescue => ex
-            Embulk.logger.error { "UnknownError: '#{ex}', uniqueid=>#{unique_doc_identifier}, data=>" + hash.to_json }
+            Embulk.logger.error { "UnknownError: '#{ex}', doc id=>#{unique_doc_id}, data=>" + hash.to_json }
           end
         end
       end
@@ -145,7 +154,9 @@ module Embulk
 
       def commit
         task_report = {
-          "records" => @recordnum 
+          "total_records" => @recordnum,
+          "success" => @successnum,
+          "skip_or_error" => (@recordnum - @successnum),
         }
         return task_report
       end
