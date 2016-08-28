@@ -22,7 +22,7 @@ in:
 out:
   type: documentdb
   docdb_endpoint: https://yoichikademo1.documents.azure.com:443/
-  docdb_account_key: EMwUa3EzsAtJ1qYfzwo9nQ3KudofsXNm3xLh1SLffKkUHMFl80OZRZIVu4lxdKRKxkgVAj0c2mv9BZSyMN7tdg==
+  docdb_account_key: EMwUa3EzsAtJ1qYfzwo9nQ3xxxfsXNm3xLh1SLffKkUHMFl80OZRZIVu4lxdKRKxkgVAj0c2mv9BZSyMN7tdg==
   docdb_database: myembulkdb
   docdb_collection: myembulkcoll
   auto_create_database: true
