@@ -1,6 +1,6 @@
 # Azure DocumentDB output plugin for Embulk
 
-embulk-output-documentdb is a embulk output plugin that dumps records to Azure DocumentDB
+embulk-output-documentdb is an embulk output plugin that dumps records to Azure DocumentDB. Embulk is a open-source bulk data loader that helps data transfer between various databases, storages, file formats, and cloud services. See [Embulk documentation](http://www.embulk.org/docs/) for details.
 
 ## Overview
 
