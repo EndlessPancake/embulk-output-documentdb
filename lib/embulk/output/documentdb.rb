@@ -45,7 +45,6 @@ module Embulk
         # resume(task, schema, count, &control)
 
         # non-resumable output:
-        Embulk.logger.info "Documentdb output start"
         task_reports = yield(task)
         Embulk.logger.info "Documentdb output finished. Task reports = #{task_reports.to_json}"
 
@@ -63,6 +62,8 @@ module Embulk
 
       # init is called in initialize(task, schema, index)     
       def init
+        Embulk.logger.info "Documentdb output init"
+        @start_time = Time.now
         # initialization code:
         @recordnum = 0
         @successnum = 0
@@ -147,16 +148,21 @@ module Embulk
       end
 
       def finish
+        Embulk.logger.info "Documentdb output finish"
+        @finish_time = Time.now
       end
 
       def abort
       end
 
       def commit
+        Embulk.logger.info "Documentdb output commit"
+        elapsed_time = @finish_time - @start_time
         task_report = {
           "total_records" => @recordnum,
           "success" => @successnum,
           "skip_or_error" => (@recordnum - @successnum),
+          "elapsed_time" => elapsed_time,
         }
         return task_report
       end
