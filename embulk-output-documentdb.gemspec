@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.summary       = "Azure DocumentDB output plugin for Embulk"
   spec.description   = "Dumps records to Azure DocumentDB"
   spec.licenses      = ["MIT"]
-  spec.homepage      = "https://github.com/yoichika/embulk-output-documentdb"
+  spec.homepage      = "https://github.com/yokawasa/embulk-output-documentdb"
 
   spec.files         = `git ls-files`.split("\n")
   spec.test_files    = spec.files.grep(%r{^(test|spec)/})
