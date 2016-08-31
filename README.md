@@ -24,7 +24,7 @@ To use Microsoft Azure DocumentDB, you must create a DocumentDB database account
  * [Create a DocumentDB collection](https://azure.microsoft.com/en-us/documentation/articles/documentdb-create-collection/)
  * [Partitioning and scaling in Azure DocumentDB](https://azure.microsoft.com/en-us/documentation/articles/documentdb-partition-data/)
 
-## Configuration
+### Embulk Configuration (config.yml)
 
 ```yaml
 out:
