@@ -98,6 +98,15 @@ $ embulk run config.yml
 
 ```
 
+## Change log
+* [Changelog](ChangeLog.md)
+
+## Links
+
+* http://yokawasa.github.io/embulk-output-documentdb
+* https://rubygems.org/gems/embulk-output-documentdb
+* http://unofficialism.info/posts/embulk-plugins-for-microsoft-azure-services/
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/yokawasa/embulk-output-documentdb.

@@ -1,8 +1,0 @@
-Release 0.1.1 - 2016/08/29
-
-	* Add elapsed time info to task_report
-
-Release 0.1.0 - 2016/08/28
-
-	* Inital Release
-	* Add documentdb.rb + document tiny client libs
