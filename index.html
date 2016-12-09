@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>embulk-output-documentdb by yokawasa</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>embulk-output-documentdb</h1>
+          <h2>Azure DocumentDB output plugin for Embulk</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/yokawasa/embulk-output-documentdb/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/yokawasa/embulk-output-documentdb/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/yokawasa/embulk-output-documentdb" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a id="azure-documentdb-output-plugin-for-embulk" class="anchor" href="#azure-documentdb-output-plugin-for-embulk" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Azure DocumentDB output plugin for Embulk</h1>
+
+<p>embulk-output-documentdb is an embulk output plugin that dumps records to Azure DocumentDB. Embulk is a open-source bulk data loader that helps data transfer between various databases, storages, file formats, and cloud services. See <a href="http://www.embulk.org/docs/">Embulk documentation</a> for details.</p>
+
+<h2>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Overview</h2>
+
+<ul>
+<li>
+<strong>Plugin type</strong>: output</li>
+<li>
+<strong>Load all or nothing</strong>: no</li>
+<li>
+<strong>Resume supported</strong>: no</li>
+<li>
+<strong>Cleanup supported</strong>: yes</li>
+</ul>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<pre><code>$ gem install embulk-output-documentdb
+</code></pre>
+
+<h2>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration</h2>
+
+<h3>
+<a id="documentdb" class="anchor" href="#documentdb" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>DocumentDB</h3>
+
+<p>To use Microsoft Azure DocumentDB, you must create a DocumentDB database account using either the Azure portal, Azure Resource Manager templates, or Azure command-line interface (CLI). In addition, you must have a database and a collection to which embulk-output-documentdb writes event-stream out. Here are instructions:</p>
+
+<ul>
+<li>Create a DocumentDB database account using <a href="https://azure.microsoft.com/en-us/documentation/articles/documentdb-create-account/">the Azure portal</a>, or <a href="https://azure.microsoft.com/en-us/documentation/articles/documentdb-automation-resource-manager-cli/">Azure Resource Manager templates and Azure CLI</a>
+</li>
+<li><a href="https://azure.microsoft.com/en-us/documentation/articles/documentdb-create-database/">How to create a database for DocumentDB</a></li>
+<li><a href="https://azure.microsoft.com/en-us/documentation/articles/documentdb-create-collection/">Create a DocumentDB collection</a></li>
+<li><a href="https://azure.microsoft.com/en-us/documentation/articles/documentdb-partition-data/">Partitioning and scaling in Azure DocumentDB</a></li>
+</ul>
+
+<h3>
+<a id="embulk-configuration-configyml" class="anchor" href="#embulk-configuration-configyml" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Embulk Configuration (config.yml)</h3>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-ent">out:</span>
+  <span class="pl-ent">type:</span> <span class="pl-s">documentdb</span>
+  <span class="pl-ent">docdb_endpoint:</span> <span class="pl-s">https://yoichikademo0.documents.azure.com:443/</span>
+  <span class="pl-ent">docdb_account_key:</span> <span class="pl-s">EMwUa3EzsAtJ1qYfzxo9nQ3KudofsXNm3xLh1SLffKkUHMFl80OZRZIVu4lxdKRKxkgVAj0c2mv9BZSyMN7tdg==</span>
+  <span class="pl-ent">docdb_database:</span> <span class="pl-s">myembulkdb</span>
+  <span class="pl-ent">docdb_collection:</span> <span class="pl-s">myembulkcoll</span>
+  <span class="pl-ent">auto_create_database:</span> <span class="pl-c1">true</span>
+  <span class="pl-ent">auto_create_collection:</span> <span class="pl-c1">true</span>
+  <span class="pl-ent">partitioned_collection:</span> <span class="pl-c1">false</span>
+  <span class="pl-ent">key_column:</span> <span class="pl-s">id</span></pre></div>
+
+<ul>
+<li>
+<strong>docdb_endpoint (required)</strong> - Azure DocumentDB Account endpoint URI</li>
+<li>
+<strong>docdb_account_key (required)</strong> - Azure DocumentDB Account key (master key). You must NOT set a read-only key</li>
+<li>
+<strong>docdb_database (required)</strong> - DocumentDB database nameb</li>
+<li>
+<strong>docdb_collection (required)</strong> - DocumentDB collection name</li>
+<li>
+<strong>auto_create_database (optional)</strong> - Default:true. By default, DocumentDB database named <strong>docdb_database</strong> will be automatically created if it does not exist</li>
+<li>
+<strong>auto_create_collection (optional)</strong> - Default:true. By default, DocumentDB collection named <strong>docdb_collection</strong> will be automatically created if it does not exist</li>
+<li>
+<strong>partitioned_collection (optional)</strong> - Default:false. Set true if you want to create and/or store records to partitioned collection. Set false for single-partition collection</li>
+<li>
+<strong>partition_key (optional)</strong> - Default:nil. Partition key must be specified for paritioned collection (partitioned_collection set to be true)</li>
+<li>
+<strong>offer_throughput (optional)</strong> - Default:10100. Throughput for the collection expressed in units of 100 request units per second. This is only effective when you newly create a partitioned collection (ie. Both auto_create_collection and partitioned_collection are set to be true )</li>
+<li>
+<strong>key_column (required)</strong> - Column name to be inserted to DocumentDB as primary key. If it's not named "id", the column name is converted into "id" (string).</li>
+</ul>
+
+<h2>
+<a id="configuration-examples" class="anchor" href="#configuration-examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration examples</h2>
+
+<p>Here are two types of the plugin configurations example - single-parition collection and partitioned collection.</p>
+
+<h3>
+<a id="1-single-partition-collection-case" class="anchor" href="#1-single-partition-collection-case" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>(1) Single-Partition Collection Case</h3>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-ent">out:</span>
+  <span class="pl-ent">type:</span> <span class="pl-s">documentdb</span>
+  <span class="pl-ent">docdb_endpoint:</span> <span class="pl-s">https://yoichikademo0.documents.azure.com:443/</span>
+  <span class="pl-ent">docdb_account_key:</span> <span class="pl-s">EMwUa3EzsAtJ1qYfzxo9nQ3KudofsXNm3xLh1SLffKkUHMFl80OZRZIVu4lxdKRKxkgVAj0c2mv9BZSyMN7tdg==</span>
+  <span class="pl-ent">docdb_database:</span> <span class="pl-s">myembulkdb</span>
+  <span class="pl-ent">docdb_collection:</span> <span class="pl-s">myembulkcoll</span>
+  <span class="pl-ent">auto_create_database:</span> <span class="pl-c1">true</span>
+  <span class="pl-ent">auto_create_collection:</span> <span class="pl-c1">true</span>
+  <span class="pl-ent">partitioned_collection:</span> <span class="pl-c1">false</span>
+  <span class="pl-ent">key_column:</span> <span class="pl-s">id</span></pre></div>
+
+<h3>
+<a id="2-partitioned-collection-case" class="anchor" href="#2-partitioned-collection-case" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>(2) Partitioned Collection Case</h3>
+
+<div class="highlight highlight-source-yaml"><pre>  <span class="pl-ent">type:</span> <span class="pl-s">documentdb</span>
+  <span class="pl-ent">docdb_endpoint:</span> <span class="pl-s">https://yoichikademo0.documents.azure.com:443/</span>
+  <span class="pl-ent">docdb_account_key:</span> <span class="pl-s">EMwUa3EzsAtJ1qYfzxo9nQ3KudofsXNm3xLh1SLffKkUHMFl80OZRZIVu4lxdKRKxkgVAj0c2mv9BZSyMN7tdg==</span>
+  <span class="pl-ent">docdb_database:</span> <span class="pl-s">myembulkdb</span>
+  <span class="pl-ent">docdb_collection:</span> <span class="pl-s">myembulkcoll</span>
+  <span class="pl-ent">auto_create_database:</span> <span class="pl-c1">true</span>
+  <span class="pl-ent">auto_create_collection:</span> <span class="pl-c1">true</span>
+  <span class="pl-ent">partitioned_collection:</span> <span class="pl-c1">true</span>
+  <span class="pl-ent">partition_key:</span> <span class="pl-s">account</span>
+  <span class="pl-ent">offer_throughput:</span> <span class="pl-c1">10100</span>
+  <span class="pl-ent">key_column:</span> <span class="pl-s">id</span></pre></div>
+
+<h2>
+<a id="build-install-and-run" class="anchor" href="#build-install-and-run" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build, Install, and Run</h2>
+
+<pre><code>$ rake
+
+$ embulk gem install pkg/embulk-output-documentdb-0.1.0.gem
+
+$ embulk preview config.yml
+
+$ embulk run config.yml
+
+</code></pre>
+
+<h2>
+<a id="change-log" class="anchor" href="#change-log" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Change log</h2>
+
+<ul>
+<li><a href="ChangeLog.md">Changelog</a></li>
+</ul>
+
+<h2>
+<a id="links" class="anchor" href="#links" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Links</h2>
+
+<ul>
+<li><a href="http://yokawasa.github.io/embulk-output-documentdb">http://yokawasa.github.io/embulk-output-documentdb</a></li>
+<li><a href="https://rubygems.org/gems/embulk-output-documentdb">https://rubygems.org/gems/embulk-output-documentdb</a></li>
+<li><a href="http://unofficialism.info/posts/embulk-plugins-for-microsoft-azure-services/">http://unofficialism.info/posts/embulk-plugins-for-microsoft-azure-services/</a></li>
+</ul>
+
+<h2>
+<a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contributing</h2>
+
+<p>Bug reports and pull requests are welcome on GitHub at <a href="https://github.com/yokawasa/embulk-output-documentdb">https://github.com/yokawasa/embulk-output-documentdb</a>.</p>
+
+<h2>
+<a id="copyright" class="anchor" href="#copyright" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Copyright</h2>
+
+<table>
+  <tr>
+    <td>Copyright</td>
+<td>Copyright (c) 2016- Yoichi Kawasaki</td>
+  </tr>
+  <tr>
+    <td>License</td>
+<td>MIT</td>
+  </tr>
+</table>
+        </section>
+
+        <footer>
+          embulk-output-documentdb is maintained by <a href="https://github.com/yokawasa">yokawasa</a><br>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
