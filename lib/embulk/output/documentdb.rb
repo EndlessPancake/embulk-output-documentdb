@@ -59,7 +59,6 @@ module Embulk
       #  return next_config_diff
       #end
 
-
       # init is called in initialize(task, schema, index)     
       def init
         Embulk.logger.info "Documentdb output init"
@@ -106,7 +105,6 @@ module Embulk
         end
       end
 
-      
       def close
       end
       
@@ -117,10 +115,13 @@ module Embulk
           hash = Hash[schema.names.zip(record)]
           @recordnum += 1
           if !hash.key?(@task['key_column']) 
-            Embulk.logger.warn { "Skip Invalid Record: no key_column, data=>" + hash.to_json }
-            next 
+            # Embulk.logger.warn { "Skip Invalid Record: no key_column, data=>" + hash.to_json }
+            # next
+            ## set key_column "random" if has no key
+            hash[@task['key_column']] = SecureRandom.uuid
           end
           unique_doc_id = "#{hash[@task['key_column']]}"
+          # Embulk.logger.warn { "Debug log #{key_column}=>#{unique_doc_id}" }
           if @task['key_column'] != 'id'
             hash.delete(@task['key_column'])
           end
