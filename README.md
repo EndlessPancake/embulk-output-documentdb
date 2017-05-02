@@ -49,6 +49,8 @@ out:
  * **partition\_key (optional)** - Default:nil. Partition key must be specified for paritioned collection (partitioned\_collection set to be true)
  * **offer\_throughput (optional)** - Default:10100. Throughput for the collection expressed in units of 100 request units per second. This is only effective when you newly create a partitioned collection (ie. Both auto\_create\_collection and partitioned\_collection are set to be true )
  * **key\_column (required)** - Column name to be inserted to DocumentDB as primary key. If it's not named "id", the column name is converted into "id" (string).
+  - If you set a key_column not included, ADD automaticaly a "id" column and values are uniq and random.
+ 
 
 ## Configuration examples
 
